@@ -32,7 +32,7 @@ const (
 	clusterDescription = "Name of the Buildkite Cluster, or empty"
 	queueLabelKey      = "Queue"
 	generalLabelKey    = "queue"
-	resourceLabelKEy   = "resource_type"
+	resourceLabelKey   = "resource_type"
 	queueDescription   = "Name of the Queue"
 	totalMetricsQueue  = "Total"
 )
@@ -166,10 +166,10 @@ func createTimeSeriesValueRequest(projectID *string, metricType *string, cluster
 			Metric: &metric.Metric{
 				Type: *metricType,
 				Labels: map[string]string{
-					clusterLabelKey:  cluster,
-					queueLabelKey:    queue,
-					generalLabelKey:  queue,
-					resourceLabelKEy: "global",
+					clusterLabelKey:             cluster,
+					queueLabelKey:               queue,
+					"custom_queue":              queue,
+					"cusom_resource_type_label": "global",
 				},
 			},
 			Resource: &monitoredres.MonitoredResource{
