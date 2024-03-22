@@ -9,6 +9,7 @@ import (
 
 	"github.com/buildkite/buildkite-agent-metrics/v5/collector"
 	"google.golang.org/genproto/googleapis/api/label"
+	"google.golang.org/genproto/googleapis/api/monitoredres"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
@@ -16,11 +17,22 @@ import (
 	"google.golang.org/genproto/googleapis/api/metric"
 )
 
+// const (
+// 	metricTypeFmt      = "custom.googleapis.com/buildkite/%s/%s"
+// 	clusterLabelKey    = "Cluster"
+// 	clusterDescription = "Name of the Buildkite Cluster, or empty"
+// 	queueLabelKey      = "Queue"
+// 	queueDescription   = "Name of the Queue"
+// 	totalMetricsQueue  = "Total"
+// )
+
 const (
 	metricTypeFmt      = "custom.googleapis.com/buildkite/%s/%s"
 	clusterLabelKey    = "Cluster"
 	clusterDescription = "Name of the Buildkite Cluster, or empty"
 	queueLabelKey      = "Queue"
+	generalLabelKey    = "queue"
+	resourceLabelKEy   = "resource_type"
 	queueDescription   = "Name of the Queue"
 	totalMetricsQueue  = "Total"
 )
@@ -112,13 +124,26 @@ func createCustomMetricRequest(projectID *string, metricType *string) *monitorin
 		ValueType:   label.LabelDescriptor_STRING,
 		Description: queueDescription,
 	}
+	generalLabel := &label.LabelDescriptor{
+		Key:         "queue",
+		ValueType:   label.LabelDescriptor_STRING,
+		Description: "The buildkite queue",
+	}
+	resourceLabel := &label.LabelDescriptor{
+		Key:         "resource_type",
+		ValueType:   label.LabelDescriptor_STRING,
+		Description: "The monitored resource type",
+	}
 	labels := []*label.LabelDescriptor{
 		clusterLabel,
 		queueLabel,
+		generalLabel,
+		resourceLabel,
 	}
 	md := &metric.MetricDescriptor{
-		Name:        *metricType,
-		Type:        *metricType,
+		Name: *metricType,
+		// Type:        *metricType,
+		Type:        strings.ToLower(*metricType),
 		MetricKind:  metric.MetricDescriptor_GAUGE,
 		ValueType:   metric.MetricDescriptor_INT64,
 		Description: fmt.Sprintf("Buildkite metric: [%s]", *metricType),
@@ -141,9 +166,14 @@ func createTimeSeriesValueRequest(projectID *string, metricType *string, cluster
 			Metric: &metric.Metric{
 				Type: *metricType,
 				Labels: map[string]string{
-					clusterLabelKey: cluster,
-					queueLabelKey:   queue,
+					clusterLabelKey:  cluster,
+					queueLabelKey:    queue,
+					generalLabelKey:  "queue",
+					resourceLabelKEy: "resource_type",
 				},
+			},
+			Resource: &monitoredres.MonitoredResource{
+				Type: "global",
 			},
 			Points: []*monitoringpb.Point{{
 				Interval: &monitoringpb.TimeInterval{
