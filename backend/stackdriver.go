@@ -168,8 +168,8 @@ func createTimeSeriesValueRequest(projectID *string, metricType *string, cluster
 				Labels: map[string]string{
 					clusterLabelKey:  cluster,
 					queueLabelKey:    queue,
-					generalLabelKey:  "queue",
-					resourceLabelKEy: "resource_type",
+					generalLabelKey:  queue,
+					resourceLabelKEy: "global",
 				},
 			},
 			Resource: &monitoredres.MonitoredResource{
